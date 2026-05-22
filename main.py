@@ -76,6 +76,7 @@ def webhook():
     """
 
     data = request.get_json(silent=True)
+    print(f"data: {data}")  ### Log the incoming payload for debugging
 
     if not data:
         logger.warning("Received non-JSON webhook body")

@@ -5,13 +5,13 @@ import base64
 import logging
 from collections import defaultdict, deque
 
-import google.generativeai as genai
+from google import genai
 
 import config
 
 logger = logging.getLogger(__name__)
 
-genai.configure(api_key=config.GOOGLE_API_KEY)
+client = genai.Client(api_key=config.GOOGLE_API_KEY)
 
 # ── System prompt ─────────────────────────────────────────────────────────────
 
@@ -33,13 +33,6 @@ If the customer explicitly confirms they want to buy an item, you MUST append th
 Replace SKU and Branch with the exact values from the database (e.g. SHIRT001_Main).
 """
 
-# ── Gemini model ──────────────────────────────────────────────────────────────
-
-_model = genai.GenerativeModel(
-    model_name=config.GOOGLE_MODEL,
-    system_instruction=_SYSTEM
-)
-
 # ── In-memory conversation history ───────────────────────────────────────────
 
 _history: dict[str, deque] = defaultdict(lambda: deque(maxlen=config.MEMORY_WINDOW_TURNS * 2))
@@ -57,7 +50,11 @@ def run_agent(
     hist = _history[sender_id]
     hist.append({"role": "user", "parts": [f"Inventory:\n{inventory_json}\n\nCustomer: {user_text}"]})
 
-    response = _model.generate_content(list(hist))
+    response = client.models.generate_content(
+        model=config.GOOGLE_MODEL,
+        contents=f"Inventory:\n{inventory_json}\n\nCustomer: {user_text}",
+        config=genai.types.GenerateContentConfig(system_instruction=_SYSTEM)
+    )
     reply = response.text.strip()
 
     hist.append({"role": "model", "parts": [reply]})

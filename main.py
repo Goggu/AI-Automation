@@ -75,8 +75,6 @@ def webhook():
         }
     """
 
-    print("RAW BODY:", request.data) ###
-
     data = request.get_json(silent=True)
 
     if not data:
@@ -91,6 +89,9 @@ def webhook():
             sender_id = messaging_event.get("sender", {}).get("id")
 
             # Filter out echo messages from the page itself
+
+            logger.info("SENDER: %s | PAGE: %s | MATCH: %s", sender_id, config.INSTAGRAM_ACCOUNT_ID, sender_id == config.INSTAGRAM_ACCOUNT_ID) ###
+
             if sender_id == config.INSTAGRAM_ACCOUNT_ID:
                 logger.debug("Skipping self-message from page account")
                 continue

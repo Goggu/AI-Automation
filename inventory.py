@@ -24,17 +24,20 @@ _SCOPES = [
 ]
 
 
-@lru_cache(maxsize=1)
-def _get_client() -> gspread.Client:
-    """Authenticate and return a cached gspread client."""
-    if config.GOOGLE_CREDENTIALS_JSON:
-        # Credentials supplied as a raw JSON string (handy for cloud deploys)
-        info = json.loads(config.GOOGLE_CREDENTIALS_JSON)
-        creds = Credentials.from_service_account_info(info, scopes=_SCOPES)
-    else:
-        creds = Credentials.from_service_account_file(config.GOOGLE_CREDENTIALS_FILE, scopes=_SCOPES)
-    return gspread.authorize(creds)
+_client = None
 
+def _get_client() -> gspread.Client:
+    global _client
+    if _client is None:
+        if config.GOOGLE_CREDENTIALS_JSON:
+            info = json.loads(config.GOOGLE_CREDENTIALS_JSON)
+            creds = Credentials.from_service_account_info(info, scopes=_SCOPES)
+        else:
+            creds = Credentials.from_service_account_file(config.GOOGLE_CREDENTIALS_FILE, scopes=_SCOPES)
+        _client = gspread.authorize(creds)
+    return _client
+
+print(f"client is ", _get_client())
 
 def fetch_inventory() -> list[dict]:
     """
@@ -53,6 +56,7 @@ def fetch_inventory() -> list[dict]:
             "Stock Quantity": "15"
         }
     """
+    print("fetch_inventory() was called")
     try:
         client = _get_client()
         sheet  = client.open_by_key(config.GOOGLE_SHEET_ID).worksheet(config.SHEET_NAME)
@@ -60,7 +64,8 @@ def fetch_inventory() -> list[dict]:
         logger.info("Fetched %d inventory rows from Google Sheets", len(rows))
         return rows
     except Exception as exc:
-        logger.error("Failed to fetch inventory: %s", exc)
+        import traceback        
+        traceback.print_exc()  # prints full error to console regardless of logger config
         return []
 
 

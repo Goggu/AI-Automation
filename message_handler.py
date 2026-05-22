@@ -52,10 +52,6 @@ def handle_message(event: dict) -> None:
     sender_id = event.get("sender", {}).get("id", "")
     message   = event.get("message", {})
 
-    print("event is:", event) ###
-    print("sender_id is:", sender_id) ###
-    print("message is:", message) ###
-
     if not sender_id or not message:
         return
 
@@ -72,6 +68,7 @@ def handle_message(event: dict) -> None:
 
         elif message.get("text"):
             _handle_text(sender_id, message["text"])
+            print(f"Handled text message from {sender_id}") ###
 
         else:
             logger.info("Unhandled message type from %s: %s", sender_id, message)

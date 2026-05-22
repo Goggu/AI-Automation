@@ -27,7 +27,7 @@ GRAPH_API_BASE        = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
 # ── AI model (Google Gemini) ───────────────────────────────────────
 
 GOOGLE_API_KEY        = os.environ.get("GOOGLE_API_KEY", "")
-GOOGLE_MODEL          = os.environ.get("GOOGLE_MODEL", "models/gemini-flash-latest:generateContent")
+GOOGLE_MODEL          = os.environ.get("GOOGLE_MODEL", "models/gemma-4-26b-a4b-it")
 GEMINI_AUDIO_MODEL    = os.environ.get("GEMINI_AUDIO_MODEL", "models/gemini-2.5-flash")
 
 # ── Google Sheets (inventory) ─────────────────────────────────────────────────
@@ -35,7 +35,7 @@ GOOGLE_SHEET_ID       = _require("GOOGLE_SHEET_ID")          # Spreadsheet ID fr
 SHEET_NAME            = os.environ.get("SHEET_NAME", "Sheet1")
 
 # Path to service-account JSON file, OR set GOOGLE_CREDENTIALS_JSON with the raw JSON string
-GOOGLE_CREDENTIALS_FILE = os.environ.get("GOOGLE_CREDENTIALS_FILE", "credentials.json")
+GOOGLE_CREDENTIALS_FILE = os.environ.get("GOOGLE_CREDENTIALS_FILE", "service_account.json")
 GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_CREDENTIALS_JSON", "")  # raw JSON (for cloud deploy)
 
 # ── WhatsApp redirect ─────────────────────────────────────────────────────────

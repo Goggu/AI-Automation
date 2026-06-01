@@ -31,13 +31,14 @@ Flow diagram:
 """
 import logging
 import mimetypes
-
+import re
 import agent
 import instagram_api as ig
 import inventory
 
 logger = logging.getLogger(__name__)
 
+_IMAGE_RE = re.compile(r"\[IMAGE:\s*(.+?)\]", re.IGNORECASE)
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
@@ -86,7 +87,11 @@ def handle_message(event: dict) -> None:
 def _handle_buy_yes(sender_id: str, message: dict) -> None:
     """Customer tapped 'Yes - Checkout'. Send WhatsApp redirect link."""
     payload    = message.get("quick_reply", {}).get("payload", "")
-    product_id = payload.replace("BUY_YES_", "", 1)
+    product_id = payload.replace("BUY_YES_", "", 1) if "BUY_YES_" in payload else agent.get_pending_product(sender_id)
+    if not product_id:
+        logger.warning("Received BUY_YES without product_id for %s", sender_id)
+        ig.send_text(sender_id, "Sorry, we couldn't identify the product you want to buy. Please try again.")
+        return
     logger.info("Purchase confirmed by %s — product: %s", sender_id, product_id)
     ig.send_whatsapp_redirect(sender_id, product_id)
     agent.clear_memory(sender_id)   # fresh start after purchase
@@ -142,41 +147,44 @@ def _handle_audio(sender_id: str, message: dict) -> None:
 # ── Switch1: dispatch agent reply ─────────────────────────────────────────────
 
 def _dispatch_agent_reply(sender_id: str, agent_reply: str) -> None:
-    """
-    If the reply contains [BUY_NOW: SKU_Branch] → send yes/no quick-reply.
-    Otherwise → send plain text.
-    """
-    product_id = ig.extract_buy_now(agent_reply)
+    # Extract image URL and remove tag from text
+    image_match = _IMAGE_RE.search(agent_reply)
+    clean_reply = _IMAGE_RE.sub("", agent_reply).strip()
+
+    # Split into before and after image tag
+    if image_match:
+        tag = image_match.group(0)
+        before = agent_reply[:image_match.start()].strip()
+        after = agent_reply[image_match.end():].strip()
+        image_url = image_match.group(1).strip()
+    else:
+        before = clean_reply
+        after = ""
+        image_url = None
+
+    product_id = ig.extract_buy_now(clean_reply)
 
     if product_id:
-        visible_text = ig.strip_buy_now(agent_reply)
-        ig.send_quick_replies(
-            recipient_id=sender_id,
-            text=f"{visible_text}\n\nAre you ready to check out?",
-            quick_replies=[
-                {
-                    "content_type": "text",
-                    "title": "Yes — Checkout ✅",
-                    "payload": f"BUY_YES_{product_id}",
-                },
-                {
-                    "content_type": "text",
-                    "title": "No thanks",
-                    "payload": "BUY_NO",
-                },
-            ],
-        )
+        visible_text = ig.strip_buy_now(clean_reply)
+        agent.set_pending_product(sender_id, product_id)
+        ig.send_text( sender_id, text=f"{visible_text}\n\nAre you ready to check out?" )
         logger.info("Sent checkout quick-reply to %s for product %s", sender_id, product_id)
     else:
-        ig.send_text(sender_id, agent_reply)
-        logger.info("Sent text reply to %s", sender_id)
+        if before:
+            ig.send_text(sender_id, before)
+        if image_url:
+            ig.send_image(sender_id, image_url)
+        if after:
+            ig.send_text(sender_id, after)
+        logger.info("Sent reply to %s", sender_id)
 
 
 # ── Utility helpers ───────────────────────────────────────────────────────────
 
 def _is_buy_yes_reply(message: dict) -> bool:
     payload = message.get("quick_reply", {}).get("payload", "")
-    return "BUY_YES" in payload
+    text = message.get("text", "").strip().lower()
+    return "BUY_YES" in payload or text in ["yes", "yeah", "yep", "sure", "ok", "okay"]
 
 
 def _has_attachment(message: dict, att_type: str) -> bool:

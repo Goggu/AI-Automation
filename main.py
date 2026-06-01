@@ -15,6 +15,8 @@ from flask import Flask, jsonify, request
 import config
 from message_handler import handle_message
 
+_processed_mids = set()
+
 # ── Logging ───────────────────────────────────────────────────────────────────
 
 logging.basicConfig(
@@ -96,6 +98,17 @@ def webhook():
             if sender_id == config.INSTAGRAM_ACCOUNT_ID:
                 logger.debug("Skipping self-message from page account")
                 continue
+
+            if messaging_event.get("message", {}).get("is_echo"):
+                logger.debug("Skipping echo message")
+                continue
+            
+            mid = messaging_event.get("message", {}).get("mid")
+            if mid:
+                if mid in _processed_mids:
+                    logger.debug("Skipping duplicate message %s", mid)
+                    continue
+                _processed_mids.add(mid)    
 
             handle_message(messaging_event)
 

@@ -41,22 +41,20 @@ def send_text(recipient_id: str, text: str) -> dict:
     })
 
 
-def send_quick_replies(recipient_id: str, text: str, quick_replies: list[dict]) -> dict:
-    """
-    Send a message with quick-reply buttons.
-
-    quick_replies format:
-        [{"content_type": "text", "title": "Yes - Checkout", "payload": "BUY_YES_SKU001"}]
-    """
+def send_image(recipient_id: str, image_url: str) -> dict:
     return _send({
         "recipient": {"id": recipient_id},
         "messaging_type": "RESPONSE",
         "message": {
-            "text": text,
-            "quick_replies": quick_replies,
-        },
+            "attachment": {
+                "type": "image",
+                "payload": {
+                    "url": image_url,
+                    "is_reusable": True
+                }
+            }
+        }
     })
-
 
 def send_whatsapp_redirect(recipient_id: str, product_id: str) -> dict:
     """
@@ -89,7 +87,7 @@ def download_media(url: str) -> bytes:
 # ── Response parsers ──────────────────────────────────────────────────────────
 
 _BUY_NOW_RE = re.compile(r"\[BUY_NOW:\s*(.+?)\]", re.IGNORECASE)
-
+print("Defined _BUY_NOW_RE: ", _BUY_NOW_RE )        ####
 
 def extract_buy_now(agent_output: str) -> str | None:
     """
@@ -97,6 +95,7 @@ def extract_buy_now(agent_output: str) -> str | None:
     e.g.  "[BUY_NOW: SHIRT001_Main]"  →  "SHIRT001_Main"
     """
     m = _BUY_NOW_RE.search(agent_output)
+    print("Extracted buy now match: ", m)        ####
     return m.group(1).strip() if m else None
 
 

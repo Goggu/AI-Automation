@@ -27,7 +27,7 @@ GRAPH_API_BASE        = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
 # ── AI model (Google Gemini) ───────────────────────────────────────
 
 GOOGLE_API_KEY        = os.environ.get("GOOGLE_API_KEY", "")
-GOOGLE_MODEL          = os.environ.get("GOOGLE_MODEL", "models/gemma-4-26b-a4b-it")
+GOOGLE_MODEL          = os.environ.get("GOOGLE_MODEL", "models/gemini-3.1-flash-lite")
 GEMINI_AUDIO_MODEL    = os.environ.get("GEMINI_AUDIO_MODEL", "models/gemini-2.5-flash")
 
 # ── Google Sheets (inventory) ─────────────────────────────────────────────────
@@ -48,3 +48,31 @@ MEMORY_WINDOW_TURNS   = int(os.environ.get("MEMORY_WINDOW_TURNS", "10"))
 # ── App ───────────────────────────────────────────────────────────────────────
 PORT                  = int(os.environ.get("PORT", "5000"))
 DEBUG                 = os.environ.get("DEBUG", "false").lower() == "true"
+
+
+
+# ── Meta / WhatsApp ───────────────────────────────────────────────────────────
+WA_PHONE_NUMBER_ID  = _require("WA_PHONE_NUMBER_ID")   # from Meta app → WhatsApp → API Setup
+WA_ACCESS_TOKEN     = _require("WA_ACCESS_TOKEN")      # from Meta app → WhatsApp → API Setup
+
+# ── Google Sheets — Orders (read-write) ──────────────────────────────────────
+ORDERS_SHEET_ID     = _require("ORDERS_SHEET_ID")          # separate sheet from inventory
+ORDERS_SHEET_NAME   = os.environ.get("ORDERS_SHEET_NAME", "Orders")
+
+# ── Razorpay ──────────────────────────────────────────────────────────────────
+RAZORPAY_KEY_ID         = _require("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET     = _require("RAZORPAY_KEY_SECRET")
+RAZORPAY_WEBHOOK_SECRET = _require("RAZORPAY_WEBHOOK_SECRET")
+
+# ── Store info ────────────────────────────────────────────────────────────────
+STORE_NAME          = os.environ.get("STORE_NAME", "Our Store")  # shown on UPI QR screen
+
+# ── WhatsApp bot port ─────────────────────────────────────────────────────────
+WA_PORT             = int(os.environ.get("WA_PORT", "5001"))
+
+# ── Absolute path fix for service account ────────────────────────────────────
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+GOOGLE_CREDENTIALS_FILE = os.path.join(
+    _BASE_DIR,
+    os.environ.get("GOOGLE_CREDENTIALS_FILE", "service_account.json")
+)

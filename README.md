@@ -96,7 +96,7 @@ cp .env.example .env
 1. Go to [Google Cloud Console](https://console.cloud.google.com) → IAM & Admin → Service Accounts → **Create**.
 2. Grant the role **Viewer**.
 3. Click the account → Keys → **Add Key → JSON** → download.
-4. Save the file as `credentials.json` in the project root.
+4. Save the file as `credentials.json` or `service_account.json` in the project root. A sample format service_account.json file has been given. Replace it with yours. 
 5. Open your Google Sheet → **Share** it with the service-account email  
    (looks like `name@project.iam.gserviceaccount.com`).
 
